@@ -1,0 +1,11 @@
+# Binary files
+**.bin
+bin/acceptableOS.img
+
+# Visual Studio Code
+.vscode/
+.history/
+*.vsix
+
+# Personal documents
+user/
