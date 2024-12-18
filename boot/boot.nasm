@@ -16,7 +16,7 @@ msg_wakeUp:     db "Waking up..."
 msgl_wakeUp:    equ $ - msg_wakeUp
 msg_diskFail:   db "Cannot read disk!"
 msgl_diskFail:  equ $ - msg_diskFail
-msg_success:    db "Found rest of booting sequence"
+msg_success:    db "Found boot stage 2"
 msgl_success:   equ $ - msg_success
 
 SECTION text
@@ -69,7 +69,7 @@ disk_read:
     loop disk_retry     ; retry (NOTE: untested code)
 
     mov ax, 0x1301          ; AH=0x13: write string - AL=0x01: update cursor
-    mov bx, 0x0004          ; BH=0x00: page number  - BL=0x04: red color
+    mov bx, 0x000F          ; BH=0x00: page number  - BL=0x0F: white color
     mov dx, 0x0100          ; write at 1,0
     mov cx, msgl_diskFail   ; set string length
     mov bp, msg_diskFail    ; set string pointer ([0x0000:Eff_Addr])
