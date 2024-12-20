@@ -13,6 +13,7 @@ bin/acceptableOS.img: $(NASM_TGTS) bin/part_table.bin
 	dd if=boot/boot.bin of=bin/acceptableOS.img conv=notrunc status=none
 	dd if=bin/part_table.bin of=bin/acceptableOS.img oflag=seek_bytes seek=446 conv=notrunc status=none
 	dd if=boot/loader.bin of=bin/acceptableOS.img oflag=seek_bytes seek=512 conv=notrunc status=none
+# Write the kernel at the beginning of your bootable partition
 
 bin/part_table.bin: bin/part_table.txt
 	cd bin; xxd -r -p part_table.txt part_table.bin

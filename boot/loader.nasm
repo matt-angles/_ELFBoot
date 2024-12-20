@@ -23,6 +23,34 @@ msg_loadFail:   db "Cannot read disk!"
 msgl_loadFail:  equ $ - msg_loadFail
 msg_loadSuccess:  db "Successfully loaded kernel"
 msgl_loadSuccess: equ $ - msg_loadSuccess
+msg_enterPE:  db "Entering PE. See you on the other side..."
+msgl_enterPE: equ $ - msg_enterPE
+
+lod_gdt:            ; Flat memory model GDT
+     ; Null descriptor
+    dq 0
+
+    ; Code descriptor
+    dw 0xFFFF       ; Segment size / 4 KiB [00:15]
+    dw 0x0000       ; Base address [00:15]
+    db 0x00         ; Base address [16:23]
+    db 0b10011010   ; Flags (P, DPL=0, S) + Type (Execute/Read)
+    db 0b11001111   ; Flags (G, 32b, ~64b) + Unused + Segment size [16:19] 
+    db 0x00         ; Base address [24:31]
+
+    ; Data descriptor
+    dw 0xFFFF       ; Segment size / 4 KiB [00:15]
+    dw 0x0000       ; Base address [00:15]
+    db 0x00         ; Base address [16:23]
+    db 0b10010010   ; Flags (P, DPL=0, S) + Type (Read/Write)
+    db 0b11001111   ; Flags (G, 32b, ~64b) + Unused + Segment size [16:19] 
+    db 0x00         ; Base address [24:31]
+
+lim_gdt: equ $ - lod_gdt - 1
+
+ptr_gdt:
+    dw lim_gdt
+    dd lod_gdt
 
 
 SEGMENT .text
@@ -106,8 +134,8 @@ load_partition:
         mov bx, sp          ; manipulate SP with general purpose register BX
         mov dx, [ss:bx+4]   ; drive number was in stack all along!
         mov dh, al          ; set head
-        mov ax, 0x0201      ; AH=0x02: read sectors into memory - AL=n: read n sectors
-        mov bx, 0x7E00      ; target memory address
+        mov ax, 0x0209      ; AH=0x02: read sectors into memory - AL=n: read n sectors
+        mov bx, 0x8000      ; target memory address
         int 0x13            ; BIOS Interrupt 13: Disk
 
         pop cx              ; get CX back
@@ -127,6 +155,18 @@ load_partition:
         mov sp, bp              ; epilogue - restore stack
         ret
 
+begin_protected_mode:
+    push msg_enterPE
+    push msgl_enterPE
+    call print_str
+    
+    cli             ; disable Maskable Hardware Interrupts
+                    ; NOTE: assuming no NMIs occur during mode switch
+    lgdt [ptr_gdt]  ; load flat model GDT at 0x7C00
+    mov eax, 0x00000011
+    mov cr0, eax    ; load CR0 with PE enabled
+    jmp 0x08:protected_mode     ; jump to protected mode code
+
 start:
     mov byte [currentLine], 2   ; initialize currentLine
 
@@ -138,8 +178,30 @@ start:
     call load_partition
     add sp, 2                   ; stack is clear
 
-    jmp $
+    jmp begin_protected_mode    ; no coming back
 
+
+BITS 32         ; Processor is now in Protected Mode
+read_elf:
+; dword_ptr read_elf(void) - does not preserve state
+; parse the kernel's ELF headers and return the entry point
+; return: EAX=entry point
+    ; NOTE: Extremely basic and specific loader. Doesn't check for anything.
+    mov bp, sp
+    mov ebx, 0x8000     ; start of 'file'
+    add ebx, [ebx+28]   ; start of Program header ; specified 28 bytes into ELF header
+    mov eax, [ebx+4]    ; entry offset, specified 4 bytes into Program header
+    add eax, 0x8000     ; add the base
+    mov sp, bp
+    ret
+
+protected_mode:
+    ; Welcome to Protected Mode! We have now access to 4 GiB of memory
+    ; NOTE: Segment registers haven't been reset yet
+    ; NOTE: A20 line hasn't been checked (though enabled in QEMU)
+    ; NOTE: Interrupts are not set up yet. The program is unresponsive
+    call read_elf
+    jmp eax             ; jump to ELF program :sunglasses:
 
 SEGMENT .bss
-currentLine: resb 1         ; static variable for print_str
+currentLine: resb 1     ; static variable for print_str
