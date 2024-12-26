@@ -1,6 +1,10 @@
-# Binary files
-**.bin
+# Binaries
+*.o
+*.bin
 bin/acceptableOS.img
+
+# Cross compilers
+cross/
 
 # Visual Studio Code
 .vscode/

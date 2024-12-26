@@ -1,5 +1,5 @@
 #!/bin/sh
-# Crude **temporary** run script for the AcceptableOS virtual machine
+# Crude run script for the AcceptableOS virtual machine
 # Dependencies: qemu
 
 cd "$(dirname "$0")"    # Set Current Working Directory (CWD) to script folder

@@ -6,7 +6,6 @@
 ; Size: max 29.75 KiB                      ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-%define ELF_SIZE 511
 %if ELF_SIZE >= 255*512
     %error "kernel is too big to be read by the BIOS!"
 %endif
@@ -25,6 +24,7 @@ msg noBoot, "No bootable partition found!"
 msg noOS, "No operating system found!"
 msg loadFail, "Cannot read disk!"
 msg loadSuccess, "Kernel loaded"
+msg elfInvalid, "Invalid ELF!"
 msg enterPM, "Entering PM. See you on the other side..."
 gdt_con:            ; Flat memory model GDT
     ; 0x00: Null descriptor
@@ -188,11 +188,18 @@ read_elf:
     ; NOTE: Extremely basic and specific loader. Doesn't check for anything.
     mov ebp, esp
     mov ebx, 0x8000     ; start of 'file'
+    cmp dword [ebx], 0x464C457F
+                        ; verify ELF magic
+    jne invalid_elf
     add ebx, [ebx+28]   ; start of Program header ; specified 28 bytes into ELF header
     mov eax, [ebx+4]    ; entry offset, specified 4 bytes into Program header
     add eax, 0x8000     ; add the base
     mov esp, ebp
     ret
+
+    invalid_elf:
+        mov eax, 0xAAAAAAAA
+        jmp stop
 
 protected_mode:
     ; Welcome to Protected Mode! We have now access to 4 GiB of memory
@@ -210,7 +217,8 @@ protected_mode:
     mov ss, eax
 
     call read_elf
-    jmp eax             ; jump to ELF program :sunglasses:
+    call eax            ; jump to ELF program :sunglasses:
+    jmp stop
 
 SEGMENT .bss
 currentLine: resb 1     ; static variable for print_str
