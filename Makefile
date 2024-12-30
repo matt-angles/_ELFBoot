@@ -7,22 +7,27 @@ DISK_SIZE=64M
 ELF_ADDRESS=$(shell echo $$((512*2048)))
 
 CC := `realpath ./cross/bin/i686-elf-gcc`
-CFLAGS := -ffreestanding -O2 -Wall -Wextra -std=gnu99
+CFLAGS := -ffreestanding -O2 -Wall -Wextra -std=gnu99 -Iinclude/
 LDFLAGS := -T src/link.ld -ffreestanding -nostdlib -lgcc -O2
 NASM_OPTS := -Ox -Wall -Werror -w-reloc
 
-bin/acceptableOS.img: src/kernel.bin boot/loader.bin boot/boot.bin bin/part_table.bin
+OBJECTS := obj/kernel.o obj/vga_text.o
+
+bin/acceptableOS.img: bin/kernel.bin boot/loader.bin boot/boot.bin bin/part_table.bin
 	@qemu-img create bin/acceptableOS.img $(DISK_SIZE)
 	dd if=boot/boot.bin of=bin/acceptableOS.img conv=notrunc status=none
 	dd if=bin/part_table.bin of=bin/acceptableOS.img oflag=seek_bytes seek=446 conv=notrunc status=none
 	dd if=boot/loader.bin of=bin/acceptableOS.img oflag=seek_bytes seek=512 conv=notrunc status=none
-	dd if=src/kernel.bin of=bin/acceptableOS.img oflag=seek_bytes seek=$(ELF_ADDRESS) conv=notrunc status=none
+	dd if=bin/kernel.bin of=bin/acceptableOS.img oflag=seek_bytes seek=$(ELF_ADDRESS) conv=notrunc status=none
 
-src/kernel.bin: src/kernel.o
+bin/kernel.bin: $(OBJECTS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
+obj/%.o: src/%.c
+	$(CC) -c $(CFLAGS) -o $@ $^
+
 boot/loader.bin: boot/loader.nasm
-	macros="-DELF_SIZE=`wc -c < src/kernel.bin`"; \
+	macros="-DELF_SIZE=`wc -c < bin/kernel.bin`"; \
 	nasm $(NASM_OPTS) $$macros -f bin -o $@ $^
 
 boot/boot.bin: boot/boot.nasm

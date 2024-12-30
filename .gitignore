@@ -1,5 +1,5 @@
 # Binaries
-*.o
+obj/
 *.bin
 bin/acceptableOS.img
 

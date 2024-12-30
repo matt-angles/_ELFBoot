@@ -1,7 +1,7 @@
 ENTRY(main)
 SECTIONS
 {
-    . = 0x8000;
+	. = 0x9000;
 	.text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.text)

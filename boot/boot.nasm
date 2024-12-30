@@ -43,11 +43,8 @@ start:
     popf                ; ensure FLAGS is initialized by loading the default
 
     ; 2. Display booting message
-    mov ax, 0x0700      ; AH=0x07: clear/scroll screen - AL=0x00: select clear
-    mov bh, 0           ; do not write blank lines
-    mov cx, 0x0000      ; set window upper left corner at 0,0
-    mov dx, 0xFFFF      ; set window lower right corner at FF,FF
-    int 0x10            ; BIOS Interrupt 10: Video
+    mov ax, 0x0003          ; AH=0x00: set video mode - AL=0x02: VGA 80x25 text mode
+    int 0x10                ; BIOS Interrupt 10: Video
 
     mov ax, 0x1301      ; AH=0x13: write string - AL=0x01: update cursor
     mov bx, 0x000F      ; BH=0x00: page number  - BL=0x0F: white color

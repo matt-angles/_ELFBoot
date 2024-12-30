@@ -155,10 +155,6 @@ load_partition:
         ret
 
 begin_protected_mode:
-    push msg_enterPM
-    push msgl_enterPM
-    call print_msg
-    
     cli                     ; disable Maskable Hardware Interrupts
                             ; NOTE: assuming no NMIs occur during mode switch
     lgdt [gdt_ptr]          ; load flat memory model GDT located at 0x7C00
@@ -177,6 +173,9 @@ start:
     call load_partition
     add sp, 2                   ; stack is clear
 
+    push msg_enterPM
+    push msgl_enterPM
+    call print_msg
     jmp begin_protected_mode    ; no coming back
 
 
@@ -191,9 +190,7 @@ read_elf:
     cmp dword [ebx], 0x464C457F
                         ; verify ELF magic
     jne invalid_elf
-    add ebx, [ebx+28]   ; start of Program header ; specified 28 bytes into ELF header
-    mov eax, [ebx+4]    ; entry offset, specified 4 bytes into Program header
-    add eax, 0x8000     ; add the base
+    mov eax, [ebx+0x18]    ; entry offset, specified 4 bytes into Program header
     mov esp, ebp
     ret
 
