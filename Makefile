@@ -11,7 +11,7 @@ CFLAGS := -ffreestanding -O2 -Wall -Wextra -std=gnu99 -Iinclude/
 LDFLAGS := -T src/link.ld -ffreestanding -nostdlib -lgcc -O2
 NASM_OPTS := -Ox -Wall -Werror -w-reloc
 
-OBJECTS := obj/kernel.o obj/vga_text.o
+OBJECTS := obj/kernel.o obj/io.o obj/vga.o obj/vga_text.o
 
 bin/acceptableOS.img: bin/kernel.bin boot/loader.bin boot/boot.bin bin/part_table.bin
 	@qemu-img create bin/acceptableOS.img $(DISK_SIZE)
@@ -20,11 +20,14 @@ bin/acceptableOS.img: bin/kernel.bin boot/loader.bin boot/boot.bin bin/part_tabl
 	dd if=boot/loader.bin of=bin/acceptableOS.img oflag=seek_bytes seek=512 conv=notrunc status=none
 	dd if=bin/kernel.bin of=bin/acceptableOS.img oflag=seek_bytes seek=$(ELF_ADDRESS) conv=notrunc status=none
 
-bin/kernel.bin: $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ $^
-
 obj/%.o: src/%.c
 	$(CC) -c $(CFLAGS) -o $@ $^
+
+obj/%.o: src/%.nasm
+	nasm $(NASM_OPTS) -f elf -o $@ $^
+
+bin/kernel.bin: $(OBJECTS)
+	$(CC) $(LDFLAGS) -o $@ $^
 
 boot/loader.bin: boot/loader.nasm
 	macros="-DELF_SIZE=`wc -c < bin/kernel.bin`"; \

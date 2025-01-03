@@ -27,12 +27,6 @@ msgl_success:   equ $ - msg_success
 
 SECTION text
 start:
-    cli                     ; Disable interrupts
-    in   al, 0x92           ; Read port 0x92
-    and  al, 0xFE           ; Clear bit 1 (A20 enable bit)
-    out  0x92, al           ; Write back to port 0x92
-    sti                     ; Re-enable interrupts
-    
     ; 1. Set up a stack (+ any other initialization)
     mov ax, 0x0000      ; using the first 64 KiB of memory (segment 0)
     mov ss, ax          ; initialize the stack segment

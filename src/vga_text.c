@@ -41,3 +41,26 @@ void vga_puts(char* s)
     while (*s)
         vga_putc(*s++);
 }
+
+char* itoa(unsigned long value, char* str)
+{
+    int i = 0;
+    while (value != 0)
+    {
+        str[i] = value%10 + '0';
+        value /= 10;
+        i++;
+    }
+    str[i] = '\0';
+    return str;
+}
+
+void vga_putul(unsigned long value)
+{
+    char iBuf[13];
+    if (value == 0)
+        vga_putc('0');
+    else
+        vga_puts(itoa(value, iBuf));
+    return;
+}
