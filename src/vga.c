@@ -74,6 +74,7 @@ struct VgaInfo {
     enum VgaMode mode;
     uint16_t* mmap;
     uint16_t resolution;
+    bool tColor;
 };
 struct VgaInfo vgaInfo;
 
@@ -111,7 +112,7 @@ int vga_set_mode(enum VgaMode mode)
     if (mode == TEXT)
     {
         vgaInfo.mmap = TEXT_MMAP;
-        vgaInfo.resolution = 80*25;
+        vgaInfo.resolution = 80*25*2;
         
         // NOTE: Quite ugly. Use a port,index,value table (except for ATTRREG)
         outb(GRAPHREG_INDEX, FILL_ENABLE);
@@ -185,7 +186,20 @@ int vgat_put(uint8_t row, uint8_t column, char ch, uint8_t color)
 {
     if (vgaInfo.mode != TEXT)
         return -1;
-    if (row > 25 || column > 80)
+    if (vgaInfo.tColor) // Disable optimizations
+    {
+        outb(GRAPHREG_INDEX, MODE);
+        outb(GRAPHREG_DATA, 0b10000);
+        outb(GRAPHREG_INDEX, MISC);
+        outb(GRAPHREG_DATA, 0b1110);
+        outb(SEQREG_INDEX, MEMCONFIG);
+        outb(SEQREG_DATA, 0b0010);
+        outb(SEQREG_INDEX, WRITEMAP);
+        outb(SEQREG_DATA, 0b0011);
+
+        vgaInfo.tColor = false;
+    }
+    if (row > 24 || column > 79)
         return 1;
 
     uint16_t offset = row*80 + column;
@@ -193,17 +207,42 @@ int vgat_put(uint8_t row, uint8_t column, char ch, uint8_t color)
     return 0;
 }
 
-int vgat_setcolor(uint8_t color)
+void vgat_setcolor(uint8_t color)
 /* Optimize writing without changing colors
    by pre-writing on the attribute plane and disabling it */
 {
-    //TODO
+    // Disable Odd/Even addressing
+    outb(GRAPHREG_INDEX, MODE);
+    outb(GRAPHREG_DATA, 0);
+    outb(GRAPHREG_INDEX, MISC);
+    outb(GRAPHREG_DATA, 0b1100);
+    outb(SEQREG_INDEX, MEMCONFIG);
+    outb(SEQREG_DATA, 0b0110);
+
+    outb(SEQREG_INDEX, WRITEMAP);
+    outb(SEQREG_DATA, 0b0010);      // Write to color plane
+
+    // NOTE: vga_fill function isn't general enough!
+    for (int i = 0; i < 80*25; i++)
+        *((uint8_t*) TEXT_MMAP + i) = color;
+
+    outb(SEQREG_INDEX, WRITEMAP);
+    outb(SEQREG_DATA, 0b0001);      // Write to character plane
+
+    vgaInfo.tColor = true;
 }
 
 int vgat_putf(uint8_t row, uint8_t column, char ch)
 /* Write directly to the character plane */
 {
-    //TODO
+    if (vgaInfo.mode != TEXT || !vgaInfo.tColor)
+        return -1;
+    if (row > 24 || column > 79)
+        return 1;
+    
+    uint16_t offset = row*80 + column;
+    *((uint8_t*) TEXT_MMAP+offset) = ch;
+    return 0;
 }
 
 void vgat_cursor_toggle(bool enabled)
@@ -216,7 +255,7 @@ void vgat_cursor_toggle(bool enabled)
 
 int vgat_cursor_move(uint8_t row, uint8_t column)
 {
-    if (row > 25 || column > 80)
+    if (row > 24 || column > 79)
         return 1;
 
     uint16_t offset = row*80 + column;
@@ -250,7 +289,7 @@ void vga_display(char* frame)
     outb(SEQREG_DATA, 0b100000);        // Screen Disable
 
     for (int i = 0; i < vgaInfo.resolution; i++)
-        *(vgaInfo.mmap+i) = *(frame+i);
+        *((uint8_t*) vgaInfo.mmap+i) = *(frame+i);
 
     outb(SEQREG_DATA, 0b000000);
 }

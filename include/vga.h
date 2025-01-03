@@ -15,8 +15,8 @@ int vga_set_mode(enum VgaMode mode);
 /* Put a character on the screen */
 int vgat_put(uint8_t row, uint8_t column, char ch, uint8_t color);
 
-/* Set a constant color to use with vgat_putf */
-int vgat_setcolor(uint8_t color);
+/* Set a constant color on the entire screen. to use with vgat_putf */
+void vgat_setcolor(uint8_t color);
 
 /* Put a character on the screen without specifying color.
    vgat_setcolor must be called before. if used, vgat_put must be

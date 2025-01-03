@@ -16,8 +16,8 @@ QEMU_DISPLAY_ADVANCED="-display gtk,gl=on,window-close=on,show-tabs=on,grab-on-h
 QEMU_DISPLAY_CURSES="-display curses"
 QEMU_NODISPLAY="-no-graphic"
 
-QEMU_DISPLAY=$QEMU_DISPLAY_SIMPLE
-QEMU_DISPLAY+=" -full-screen"
+QEMU_DISPLAY=$QEMU_DISPLAY_ADVANCED
+#QEMU_DISPLAY+=" -full-screen"
 
 #QEMU_DEBUG="-d int,pcall,guest_errors -no-reboot -no-shutdown"
 
