@@ -29,12 +29,6 @@ void vgat_cursor_toggle(bool enabled);
 /* Move the cursor in a specified position */
 int vgat_cursor_move(uint8_t row, uint8_t column);
 
-/* Underline a character */
-int vgat_underline(uint8_t row, uint8_t column, bool enabled);
-
-/* Set the blinking state of a character */
-int vgat_blink(uint8_t row, uint8_t column, bool enabled);
-
 /* TODO: Not implemented! */
 void vgat_load_font();
 

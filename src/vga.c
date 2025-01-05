@@ -70,15 +70,15 @@ enum CrtReg {
 /* TEXT mode constants */
 #define TEXT_MMAP (uint16_t*) 0x000B8000
 
-struct VgaInfo {
+static struct VgaInfo {
     enum VgaMode mode;
     uint16_t* mmap;
     uint16_t resolution;
     bool tColor;
-};
-struct VgaInfo vgaInfo;
+} vgaInfo;
 
 
+/*
 static uint8_t read_attrreg(enum AttrReg index)
 // From SeaBIOS VGA implementation
 {
@@ -90,6 +90,7 @@ static uint8_t read_attrreg(enum AttrReg index)
     outb(ATTRREG_INDEXW, orig);
     return v;
 }
+*/
 
 static void write_attrreg(enum AttrReg index, uint8_t value)
 // From SeaBIOS VGA implementation
@@ -165,13 +166,14 @@ int vga_set_mode(enum VgaMode mode)
         outb(MISCREG_W, 0x67);
 
         // Attribute registers preset (finicky)
-        write_attrreg(ATTRCONFIG, 0b1100);
+        write_attrreg(ATTRCONFIG, 0b0100);
         write_attrreg(OVERSCAN_COLOR, 0);
         write_attrreg(COLORMAP, 0b1111);
         write_attrreg(PIXELSHIFT, 0x08);
         write_attrreg(COLORSELECT, 0);
 
         //vgat_load_font();
+        vga_fill(0, 0);
     }
     else
         return -1;
@@ -264,16 +266,6 @@ int vgat_cursor_move(uint8_t row, uint8_t column)
     outb(CRTREG_INDEX, CURSOR_LOCATION_H);
     outb(CRTREG_DATA, offset >> 8);
     return 0;
-}
-
-int vgat_underline(uint8_t row, uint8_t column, bool enabled)
-{
-    //TODO
-}
-
-int vgat_blink(uint8_t row, uint8_t column, bool enabled)
-{
-    //TODO
 }
 
 void vgat_load_font()

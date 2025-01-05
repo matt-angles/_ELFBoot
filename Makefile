@@ -11,7 +11,7 @@ CFLAGS := -ffreestanding -O2 -Wall -Wextra -std=gnu99 -Iinclude/
 LDFLAGS := -T src/link.ld -ffreestanding -nostdlib -lgcc -O2
 NASM_OPTS := -Ox -Wall -Werror -w-reloc
 
-OBJECTS := obj/kernel.o obj/io.o obj/vga.o obj/vga_text.o
+OBJECTS := obj/kernel.o obj/io.o obj/vga.o obj/terminal.o
 
 bin/acceptableOS.img: bin/kernel.bin boot/loader.bin boot/boot.bin bin/part_table.bin
 	@qemu-img create bin/acceptableOS.img $(DISK_SIZE)
