@@ -1,9 +1,8 @@
 # Binaries
+bin/
 obj/
-*.bin
-bin/acceptableOS.img
 
-# Cross compilers
+# Cross tools
 cross/
 
 # Visual Studio Code
