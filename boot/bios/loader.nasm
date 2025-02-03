@@ -69,7 +69,6 @@ start:
 
 BITS 64
 entry:
-    mov rdi, 0x200000
-    add rdi, qword [0x7E00 + 0x18]
+    mov rdi, qword [0x7E00 + 0x18]
     call rdi
     jmp $               ; How Did We Get Here?

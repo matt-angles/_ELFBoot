@@ -6,11 +6,14 @@ DISK_SIZE=64M
 
 
 CC := $(shell realpath ./cross/bin/x86_64-elf-gcc)
-CFLAGS := -ffreestanding -O2 -Wall -Wextra -Iinclude/
+CFLAGS := -Iinclude -ffreestanding -O2 -Wall -Wextra
 LDFLAGS := -T src/link.ld -ffreestanding -nostdlib -lgcc -O2
-NASM_OPTS := -Ox -Wall -Werror -w-reloc
+NASM_FLAGS := -Ox -Wall -Werror -w-reloc
 
-OBJECTS := obj/kernel.o
+SRCS := $(shell find src -name '*.c' -or -name '*.nasm')
+OBJECTS := $(patsubst src/%, obj/%, $(SRCS))
+OBJECTS := $(OBJECTS:.c=.o)
+OBJECTS := $(OBJECTS:.nasm=.o)
 
 .PHONY: all, pre_build, clean
 all: pre_build bin/os.img
@@ -27,16 +30,18 @@ bin/os.img: bin/kernel.bin bin/loader.bin bin/boot.bin
 	dd if=bin/kernel.bin of=bin/os.img oflag=seek_bytes seek=1048576 conv=notrunc status=none
 
 obj/%.o: src/%.c
-	$(CC) -c $(CFLAGS) -o $@ $^
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c -o $@ $^
 
 obj/%.o: src/%.nasm
-	nasm $(NASM_OPTS) -f elf64 -o $@ $^
+	@mkdir -p $(dir $@)
+	nasm $(NASM_FLAGS) -f elf64 -o $@ $^
 
 bin/kernel.bin: $(OBJECTS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
 bin/loader.bin: boot/bios/*.nasm
-	nasm $(NASM_OPTS) -iboot/bios/ -f bin -o $@ boot/bios/loader.nasm
+	nasm $(NASM_FLAGS) -iboot/bios/ -f bin -o $@ boot/bios/loader.nasm
 
 bin/boot.bin: bin/loader.bin
 	macros="-DLOADER_SIZE=`stat -c%s bin/loader.bin` \

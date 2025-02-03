@@ -1,6 +1,6 @@
 #!/bin/sh
 # Script to download, compile and install the OS cross compiling tools
-# Dependencies (script): coreutils, curl, make
+# Dependencies (script): coreutils, curl, tar, make
 # Dependencies (build): gcc, g++, bison, flex, gmp, mpfr, mpc, texinfo
 
 # !* Modify parameters here *!
@@ -8,8 +8,6 @@ GNU_MIRROR="https://ftp.gnu.org"
 BINUTILS_VERSION="2.43.1"
 GCC_VERSION="14.2.0"
 
-
-# TODO: missing error handling for curl, configure and make
 
 echo "x86_64-elf Cross Tools installer"
 echo -e "--------------------------------\n"
@@ -26,17 +24,17 @@ elif [ ! -z "$(ls -A cross)" ]; then
 fi
 
 
+PREFIX=`realpath .`
+export PATH="$PREFIX/bin:$PATH"
+
+set -e      # abort at any error
 cd ./cross
 echo "Downloading - BinUtils $BINUTILS_VERSION"
 curl "$GNU_MIRROR/gnu/binutils/binutils-$BINUTILS_VERSION.tar.gz" -o binutils_source.tar.gz
-tar -xf binutils_source.tar.gz
+tar -xzf binutils_source.tar.gz
 echo "Downloading - GCC $GCC_VERSION"
 curl "$GNU_MIRROR/gnu/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz" -o gcc_source.tar.gz
-tar -xf gcc_source.tar.gz
-
-
-PREFIX=`realpath .`
-export PATH="$PREFIX/bin:$PATH"
+tar -xzf gcc_source.tar.gz
 
 mkdir binutils_build
 cd binutils_build
@@ -64,7 +62,7 @@ cd ..
 
 
 echo -e "\nCleaning up..."
-rm -r *tar.gz
+rm -f *tar.gz
 rm -rf binutils-$BINUTILS_VERSION binutils_build
 rm -rf gcc-$GCC_VERSION gcc_build
 echo "Done. Have a nice day!"

@@ -57,7 +57,7 @@ elf_segment:
 
         ; disk_pkt.size
         mov eax, [bx+0x20]      ; EAX=+0x20: segment size (in bytes)
-        div edi
+        div ebp
         inc eax                 ; segment size (LBA) = EDX:EAX / EDI + 1
         mov [disk_pkt.size], ax
 
@@ -79,8 +79,7 @@ elf_segment:
         push ecx                ; save ecx for outer loop
         mov ecx, eax
         mov esi, 0x8000         ; Current address
-        mov edi, 0x200000       ; New address: 2MB
-        add edi, [bx+0x10]      ; New address += offset
+        mov edi, [bx+0x10]      ; New address += offset
         a32 rep movsw           ; Copy segment!
         pop ecx
 
