@@ -82,7 +82,12 @@ char tty_putc(char c)
         tty_clear();
 
     // NOTE: Useful characters such as BEL, BS, HT, LF, FF or CR are not handled
-    if (c > 31)
+    if (c == '\n')
+    {
+        tty.cursorY++;
+        tty.cursorX = 0;
+    }
+    else if (c > 31)
         vgat_putf(tty.cursorY, tty.cursorX, c);
     vgat_cursor_move(tty.cursorY, tty.cursorX);
     tty.cursorX++;

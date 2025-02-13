@@ -6,7 +6,7 @@ DISK_SIZE=64M
 
 
 CC := $(shell realpath ./cross/bin/x86_64-elf-gcc)
-CFLAGS := -Iinclude -ffreestanding -O2 -Wall -Wextra
+CFLAGS := -Iinclude -ffreestanding -mgeneral-regs-only -O2 -Wall -Wextra
 LDFLAGS := -T src/link.ld -ffreestanding -nostdlib -lgcc -O2
 NASM_FLAGS := -Ox -Wall -Werror -w-reloc
 

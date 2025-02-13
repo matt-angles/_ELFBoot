@@ -5,10 +5,12 @@
 ; Function: Parse MBR, find kernel partition ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+SECTION .data
 msg noBoot, "No bootable partition found."
 msg noOS, "Operating System not found"
 
-mbr:
+SECTION .text
+find_elf:
 ; Function: parse the MBR to find kernel partition
 ; Argument: nothing
 ; Return  : EAX = LBA address of kernel partition

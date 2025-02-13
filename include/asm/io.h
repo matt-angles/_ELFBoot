@@ -1,5 +1,5 @@
-#ifndef H_IO
-#define H_IO
+#ifndef H_ASM_IO
+#define H_ASM_IO
 
 #include <stdint.h>
 

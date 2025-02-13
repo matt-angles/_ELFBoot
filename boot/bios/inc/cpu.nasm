@@ -5,6 +5,7 @@
 ; Function: Configure the CPU for 64 bit   ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+SECTION .data
 gdt:
 ; Global Descriptor Table for 64-bit segmentation
 ; (the 64-bit code segment flags are set at runtime)
@@ -31,6 +32,7 @@ gdt_ptr:
     dq gdt              ; GDT address (64-bit, truncated when used in PM)
 
 
+SECTION .text
 unreal_mode:
     ; Temporarily modify GDT to make CS segment 16-bit compatible
     push word [gdt.code+6]
@@ -113,6 +115,6 @@ done:
     mov es, ax
     mov fs, ax
     mov gs, ax
-    jmp entry
+    jmp end
 
 BITS 16

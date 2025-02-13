@@ -5,6 +5,7 @@
 ; Function: Load executable in memory     ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+SECTION .data
 msg noELF, "ELF not found."
 disk_pkt:
            dw 0x0010        ; 0x0010: disk packet identifier
@@ -12,7 +13,7 @@ disk_pkt:
     .addr: dd 0x7E00        ; 0x0000:0x7E00 - transfer address
     .lba:  dq 0             ; 0: LBA absolute start address
 
-
+SECTION .text
 load_elf:
 ; Function: load the ELF executable into high memory
 ; Argument: EAX = LBA of kernel partition
