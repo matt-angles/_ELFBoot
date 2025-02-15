@@ -24,7 +24,7 @@ elif [ ! -z "$(ls -A cross)" ]; then
 fi
 
 
-PREFIX=`realpath .`
+PREFIX=`realpath cross`
 export PATH="$PREFIX/bin:$PATH"
 
 set -e      # abort at any error
