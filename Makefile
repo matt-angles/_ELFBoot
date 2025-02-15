@@ -14,13 +14,19 @@ SRCS := $(shell find src -name '*.c' -or -name '*.nasm')
 OBJECTS := $(patsubst src/%, obj/%, $(SRCS))
 OBJECTS := $(OBJECTS:.c=.o)
 OBJECTS := $(OBJECTS:.nasm=.o)
+LISTINGS := $(OBJECTS:.o=.s)
 
-.PHONY: all, pre_build, clean
+# Targets
+.PHONY: all, pre_build, assembly, clean
 all: pre_build bin/os.img
 pre_build:
 	@if [ ! -d "bin" ]; then mkdir "bin"; fi
 	@if [ ! -d "obj" ]; then mkdir "obj"; fi
+assembly: pre_build $(LISTINGS) bin/boot.s
+clean:
+	rm -rf bin obj
 
+# 'all' target
 bin/os.img: bin/kernel.bin bin/loader.bin bin/boot.bin
 	@qemu-img create bin/os.img $(DISK_SIZE)
 	python3 tools/part_table.py bin/os.img
@@ -40,7 +46,7 @@ obj/%.o: src/%.nasm
 bin/kernel.bin: $(OBJECTS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
-bin/loader.bin: boot/bios/*.nasm
+bin/loader.bin: boot/bios/loader.nasm boot/bios/inc/*.nasm
 	nasm $(NASM_FLAGS) -iboot/bios/ -f bin -o $@ boot/bios/loader.nasm
 
 bin/boot.bin: bin/loader.bin
@@ -50,5 +56,21 @@ bin/boot.bin: bin/loader.bin
 	@if [ $$(stat -c%s $@) -gt 440 ]; then			 \
 		rm -f $@; echo "error: booter is larger than 440 bytes"; exit 1; fi
 
-clean:
-	rm -rf bin obj
+# 'assembly' target
+obj/%.s: src/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -S -o $@ $^
+
+obj/%.s: src/%.nasm
+	@mkdir -p $(dir $@)
+	nasm $(NASM_FLAGS) -f elf64 -l $@ $^
+
+bin/loader.s: boot/bios/*.nasm
+	nasm $(NASM_FLAGS) -iboot/bios/ -f bin -l $@ -o bin/loader.bin boot/bios/loader.nasm
+
+bin/boot.s: bin/loader.s
+	macros="-DLOADER_SIZE=`stat -c%s bin/loader.bin` \
+			-DLOADER_CHECK=`xxd -e -l 4 bin/loader.bin | awk '{printf \"0x\"$$2}'`"; \
+	nasm $(NASM_OPTS) $$macros -f bin -l $@ -o bin/boot.bin boot/bios/boot.nasm
+	@if [ $$(stat -c%s bin/boot.bin) -gt 440 ]; then			 \
+		rm -f $@; echo "error: booter is larger than 440 bytes"; exit 1; fi

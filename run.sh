@@ -4,9 +4,10 @@
 
 cd "$(dirname "$0")"    # set Current Working Directory (CWD) to script folder
 
-while getopts "dfg:" opt; do
+while getopts "dsfg:" opt; do
     case "$opt" in
         d)debug=true;;
+        s)serial=true;;
         f)fullscreen=true;;
         g)graphic_mode=$OPTARG;;
         *)exit 1;;
@@ -31,6 +32,9 @@ if [ "$fullscreen" = true ]; then
 fi
 if [ "$debug" = true ]; then
     QEMU_DEBUG="-d int,pcall,guest_errors -no-reboot -no-shutdown"
+fi
+if [ "$serial" = true ]; then
+    QEMU_DEBUG+="-serial file:bin/log"
 fi
 
 qemu-system-x86_64 $QEMU_BASE_OPTIONS $QEMU_DISPLAY $QEMU_DEBUG
